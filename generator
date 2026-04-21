@@ -8,15 +8,15 @@ class SimpleGenerator(nn.Module):
         )
         self.down1 = nn.Sequential(
             nn.Conv2d(base_ch, base_ch * 2, 4, stride=2, padding=1),
-            ResidualUNetBlock(base_ch * 2, base_ch * 2)
+            RUBlock(base_ch * 2, base_ch * 2)
         )
         self.down2 = nn.Sequential(
             nn.Conv2d(base_ch * 2, base_ch * 4, 4, stride=2, padding=1),
-            ResidualUNetBlock(base_ch * 4, base_ch * 4)
+            RUBlock(base_ch * 4, base_ch * 4)
         )
         self.down3 = nn.Sequential(
             nn.Conv2d(base_ch * 4, base_ch * 8, 4, stride=2, padding=1),
-            ResidualUNetBlock(base_ch * 8, base_ch * 8),
+            RUBlock(base_ch * 8, base_ch * 8),
             STDM(base_ch * 8)
         )
         self.swin = GlobalTransformer(embed_dim=base_ch * 8, depths=(2, 2, 6, 2), num_heads=(8, 8, 16, 16), window_size=8)
@@ -26,17 +26,17 @@ class SimpleGenerator(nn.Module):
         )
         self.ag1 = AttentionGate(F_g=base_ch * 8, F_l=base_ch * 8, F_int=base_ch * 4)
         self.dec1_fuse = nn.Sequential(nn.Conv2d(base_ch * 16, base_ch * 4, 1),
-                                       ResidualUNetBlock(base_ch * 4, base_ch * 4))
+                                      RUBlock(base_ch * 4, base_ch * 4))
         self.dec1_up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)
         self.ag2 = AttentionGate(F_g=base_ch * 4, F_l=base_ch * 4, F_int=base_ch * 2)
         self.dec2_fuse = nn.Sequential(nn.Conv2d(base_ch * 8, base_ch * 2, 1),
-                                       ResidualUNetBlock(base_ch * 2, base_ch * 2))
+                                       RUBlock(base_ch * 2, base_ch * 2))
         self.dec2_up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)
         self.ag3 = AttentionGate(F_g=base_ch * 2, F_l=base_ch * 2, F_int=base_ch)
-        self.dec3_fuse = nn.Sequential(nn.Conv2d(base_ch * 4, base_ch, 1), ResidualUNetBlock(base_ch, base_ch))
+        self.dec3_fuse = nn.Sequential(nn.Conv2d(base_ch * 4, base_ch, 1), RUBlock(base_ch, base_ch))
         self.dec3_up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=False)
         self.ag4 = AttentionGate(F_g=base_ch, F_l=base_ch, F_int=base_ch // 2)
-        self.dec4_fuse = nn.Sequential(nn.Conv2d(base_ch * 2, base_ch, 1), ResidualUNetBlock(base_ch, base_ch))
+        self.dec4_fuse = nn.Sequential(nn.Conv2d(base_ch * 2, base_ch, 1), RUBlock(base_ch, base_ch))
         self.dropout = nn.Dropout(p=0.1)
         self.final_conv = nn.Conv2d(base_ch, in_ch, 3, padding=1)
 
