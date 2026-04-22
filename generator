@@ -1,4 +1,4 @@
-class SimpleGenerator(nn.Module):
+class Generator(nn.Module):
     def __init__(self, in_ch=2, base_ch=64):
         super().__init__()
         self.base_ch = base_ch
@@ -19,8 +19,8 @@ class SimpleGenerator(nn.Module):
             RUBlock(base_ch * 8, base_ch * 8),
             STDM(base_ch * 8)
         )
-        self.swin = GlobalTransformer(embed_dim=base_ch * 8, depths=(2, 2, 6, 2), num_heads=(8, 8, 16, 16), window_size=8)
-        self.swin_proj = nn.Sequential(
+        self.G = GlobalTransformer(embed_dim=base_ch * 8, depths=(2, 2, 6, 2), num_heads=(8, 8, 16, 16), window_size=8)
+        self.G_proj = nn.Sequential(
             nn.Conv2d(base_ch * 8, base_ch * 8, 1),
             nn.InstanceNorm2d(base_ch * 8), nn.GELU()
         )
@@ -54,8 +54,8 @@ class SimpleGenerator(nn.Module):
         x1 = self.down1(x0)
         x2 = self.down2(x1)
         x3 = self.down3(x2)
-        swin_out = self.swin(x3)
-        x_bt = self.swin_proj(swin_out) + x3
+        swin_out = self.G(x3)
+        x_bt = self.G_proj(G_out) + x3
         x3_gated = self.ag1(g=x_bt, x=x3)
         d1 = torch.cat([x_bt, x3_gated], dim=1)
         d1 = self.dec1_fuse(d1)
